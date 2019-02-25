@@ -19,7 +19,6 @@ int pos = 0;    // variable to store the servo position
 #define ANGLE_STEP 1
 #define SPEED_MS 30
 #define HOLD_MS 1000
-#define PATROL_WAIT_MS 1800000
 
 #define TOUCH_DETECT_MS   1500
 #define TOUCH_RELEASE_MS  1000
@@ -33,12 +32,13 @@ int pos = 0;    // variable to store the servo position
 #define TOUCH_TIME  
 
 unsigned long lastPatrolMs = 0;
+const unsigned long  PATROL_WAIT_MS = 1800000;
 
 void setup() {
   pinMode(SERVO_PIN, OUTPUT);
   pinMode(LED_PIN, OUTPUT); 
   pinMode(TOUCH_PIN, INPUT);
-  Serial.begin(115200);
+  Serial.begin(9600);
   Serial.println("Let's go Zaku Servo!\n\n");
   myservo.attach(SERVO_PIN);  // attaches the servo on pin 9 to the servo object
   delay(500);
@@ -47,11 +47,17 @@ void setup() {
   analogWrite(LED_PIN, 255);
   myservo.write(ANGLE_MID);              // tell servo to go to position in variable 'pos'
   breath(5,5);
+  Serial.print(millis());
+  Serial.print(" - Patrol in every ");
+  Serial.print(PATROL_WAIT_MS);
+  Serial.println(" ms");
   //patrol();
 }
 
 void loop() {
   if ((millis() - lastPatrolMs) > PATROL_WAIT_MS) {
+    // make sure patrol in fixed period, not affected by touch action
+    lastPatrolMs += PATROL_WAIT_MS;
     patrol();
   }
   uint8_t action = CheckTouchAction();
@@ -184,7 +190,6 @@ uint8_t CheckTouchAction() {
 void patrol() {
   Serial.print(millis());
   Serial.println(" - Start patrol");
-  lastPatrolMs = millis();
   breath_up(10, 1);
   analogWrite(LED_PIN, 255);
   for (pos = ANGLE_MID; pos >= ANGLE_LEFT; pos -= ANGLE_STEP) { // goes from 0 degrees to 180 degrees
